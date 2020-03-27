@@ -35,7 +35,7 @@ public class CustomerController {
 	
 	@GetMapping("/")
 	public List<Customer> getCustomers() {
-		return (List<Customer>) customerRepository.findAll();
+		return customerRepository.findAll();
 	}
 	
 	@GetMapping("/{id}")
