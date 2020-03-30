@@ -4,7 +4,10 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,10 +20,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import com.insure.tech.api.customers.common.HelperUtility;
 import com.insure.tech.api.customers.entity.Customer;
 import com.insure.tech.api.customers.model.CustomerDto;
+import com.insure.tech.api.customers.model.PolicyDto;
 import com.insure.tech.api.customers.repository.CustomerRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +36,8 @@ import lombok.RequiredArgsConstructor;
 public class CustomerController {
 	
 	private final CustomerRepository customerRepository;
+	private final RestTemplate restTemplate;
+	private final Environment environment;
 	
 	
 	@GetMapping("/")
@@ -40,7 +47,17 @@ public class CustomerController {
 	
 	@GetMapping("/{id}")
 	ResponseEntity<CustomerDto> getCustomer(@PathVariable UUID id) {
-		return new ResponseEntity<>(customerToCustomerDto(customerRepository.findById(id).get()), HttpStatus.OK);
+		
+        //String policyServiceUrl = String.format(environment.getProperty("albums.url"), id);
+		String policyServiceUrl = String.format("http://policy-service/api/v1/customers/%s/policies",id);
+        
+        ResponseEntity<List<PolicyDto>> policiesListResponse = restTemplate.exchange(policyServiceUrl, HttpMethod.GET, null, new ParameterizedTypeReference<List<PolicyDto>>() {
+        });
+        List<PolicyDto> policies = policiesListResponse.getBody(); 
+        CustomerDto customerResponseDto = customerToCustomerDto(customerRepository.findById(id).get());
+        customerResponseDto.setPolicies(policies);
+		
+		return new ResponseEntity<>(customerResponseDto, HttpStatus.OK);
 	}
 	
 	@PostMapping("/")

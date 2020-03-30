@@ -28,6 +28,7 @@ System.out.println("here"+customerRepository.count());
 	}
 
 	private void loadCustomerObjects() {
+		
 		Customer c1 = Customer.builder().id(UUID.randomUUID()).firstName("bob")
 				.lastName("dillon").active(Boolean.TRUE)
 				.createdDate(new Timestamp(System.currentTimeMillis()))
